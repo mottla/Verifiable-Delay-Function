@@ -9,6 +9,7 @@ Verifiable Delay Functions implementation in Go, based on
 Its crypto. What can possibly go wrong?!
 
 ##Usage
+
 To setup a VDF with 512 bit RSA security
 ```
 security := uint64(512)
