@@ -5,11 +5,11 @@ Verifiable Delay Functions implementation in Go, based on
 - `Simple Verifiable Delay Functions`, Krzysztof Pietrzak https://research-explorer.app.ist.ac.at/download/6528/6529/2019_LIPIcs_Pietrzak.pdf
 
 
-### Caution & Warning
+## Caution & Warning
 Its crypto. What can possibly go wrong?!
 
 
-###Usage
+## Usage
 To setup a VDF with k bit RSA security
 ```
 security := uint64(k)
