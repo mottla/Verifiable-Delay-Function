@@ -5,21 +5,21 @@ Verifiable Delay Functions implementation in Go, based on
 - `Simple Verifiable Delay Functions`, Krzysztof Pietrzak https://research-explorer.app.ist.ac.at/download/6528/6529/2019_LIPIcs_Pietrzak.pdf
 
 
-## Caution & Warning
+### Caution & Warning
 Its crypto. What can possibly go wrong?!
 
-##Usage
 
-To setup a VDF with 512 bit RSA security
+###Usage
+To setup a VDF with k bit RSA security
 ```
-security := uint64(512)
+security := uint64(k)
 N := Setup(security)
 
 ```
 
-To create a lock that requires min 256 steps
+To create a lock that requires min T squarings
 ```
-instance := Generate(N, 256, security)
+instance := Generate(N, T, k)
 ```
 
 Solve the puzzle. Currently we only implement the naive solver

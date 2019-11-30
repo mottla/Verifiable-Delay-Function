@@ -11,7 +11,7 @@ import (
 func TestProof(t *testing.T) {
 	max := new(big.Int).SetUint64(1 << 63)
 	seed, err := cr.Int(cr.Reader, max)
-	if err!=nil{
+	if err != nil {
 		t.Error("random failed")
 	}
 	rand.Seed(seed.Int64())
@@ -42,6 +42,9 @@ func TestProof(t *testing.T) {
 				t.Error("bit flip must cause verify to reject with overwhelming prob")
 			}
 			instance.mu[el] = old
+			if !instance.Verify() {
+				t.Error("verification failed")
+			}
 			//fmt.Println(newer.String())
 			//fmt.Println(old.String())
 		}
