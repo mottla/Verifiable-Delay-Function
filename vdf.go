@@ -17,7 +17,7 @@ func Setup(security uint64) *big.Int {
 
 	var err error
 
-	chk := func(dest *big.Int, wg *sync.WaitGroup) () {
+	chk := func(dest *big.Int, wg *sync.WaitGroup) {
 		ctr := 0
 		var tmp *big.Int
 		for {
@@ -57,19 +57,24 @@ func isSavePrime(prime *big.Int) bool {
 
 //Generate takes a rsaModulus of two safe primes, a security parameter and the squaring parameter T
 //it computes a challange x, which is elment of the quadratic residue class QR+ whose membership can be efficiently checked
-func Generate(rsaModulus *big.Int, T, security uint64) (Instance) {
+func Generate(rsaModulus *big.Int, T, security uint64) Instance {
 
 	if !IsPowerTwo(T) {
 		panic("currently time parameter only powers of two allowed ")
 	}
 
+	//generate random x in [0,N)
 	var x, err = rand.Int(rand.Reader, rsaModulus)
-	for big.Jacobi(x, rsaModulus) != 1 {
+	//check if gcd(x,N)=1, to ensure that x in Z_N*
+	for big.Jacobi(x, rsaModulus) == 0 {
 		x, err = rand.Int(rand.Reader, rsaModulus)
 	}
 	if err != nil {
 		panic(err)
 	}
+	//set x <- x²|N to ensure its a member of the quadratic residue class
+	x.Mul(x, x)
+	x.Mod(x, rsaModulus)
 
 	return Instance{
 		rsaModulus:   rsaModulus,
@@ -94,8 +99,8 @@ type Instance struct {
 //it solves the RSW timelock puzzle and stores the proof instance in the calling instantiation
 //this implementation is naive, as it does not performe the suggested optimiced solve algorithm in the paper.
 func (in *Instance) NaiveSolve() {
-	mu1 := Square(in.challenge,in.rsaModulus, in.T/2)
-	y1 := Square(mu1,in.rsaModulus, in.T/2)
+	mu1 := Square(in.challenge, in.rsaModulus, in.T/2)
+	y1 := Square(mu1, in.rsaModulus, in.T/2)
 	in.y = y1
 	r1 := in.hash(in.challenge, y1, mu1, in.T)
 	in.mu = append(in.mu, mu1)
@@ -113,7 +118,7 @@ func (in *Instance) naiveSolve(xi, yi *big.Int, twoPoweri uint64) {
 	if twoPoweri > in.T {
 		return
 	}
-	mui := Square(xi, in.rsaModulus,in.T/(twoPoweri))
+	mui := Square(xi, in.rsaModulus, in.T/(twoPoweri))
 	in.mu = append(in.mu, mui)
 	ri := in.hash(xi, yi, mui, in.T/(twoPoweri>>1))
 
@@ -143,16 +148,16 @@ func (in *Instance) Verify() bool {
 		yii.Mod(yii, in.rsaModulus)
 		y = yii
 	}
-	return Square(x,in.rsaModulus,1).Cmp(y) == 0
+	return Square(x, in.rsaModulus, 1).Cmp(y) == 0
 }
 
 // start in -> in²^target
 func Square(in, mod *big.Int, target uint64) (res *big.Int) {
-	res= new(big.Int).Set(in)
-	return square(res, mod,0, target)
+	res = new(big.Int).Set(in)
+	return square(res, mod, 0, target)
 }
 
-func square(in, mod *big.Int, squareTimes, target uint64) (*big.Int) {
+func square(in, mod *big.Int, squareTimes, target uint64) *big.Int {
 	if squareTimes == target {
 		return in
 	}
@@ -163,7 +168,7 @@ func square(in, mod *big.Int, squareTimes, target uint64) (*big.Int) {
 
 //note that this is a sloppy solution. If bitsize of the rsa modulus is bigger then 512, we may lose something.. however
 //i do not understand how problematic that would be
-func (in *Instance)hash(x, y, mu *big.Int, T uint64) *big.Int {
+func (in *Instance) hash(x, y, mu *big.Int, T uint64) *big.Int {
 	b := sha512.New()
 	b.Write(x.Bytes())
 	b.Write(y.Bytes())
@@ -172,7 +177,7 @@ func (in *Instance)hash(x, y, mu *big.Int, T uint64) *big.Int {
 	binary.LittleEndian.PutUint64(bits, T)
 	b.Write(bits)
 	res := new(big.Int).SetBytes(b.Sum(nil))
-	res.Mod(res,in.rsaModulus)
+	res.Mod(res, in.rsaModulus)
 	return res
 }
 
