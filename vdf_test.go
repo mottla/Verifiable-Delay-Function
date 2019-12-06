@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"math/rand"
 	"testing"
+	"time"
 )
 
 func TestProof(t *testing.T) {
@@ -52,6 +53,28 @@ func TestProof(t *testing.T) {
 	}
 
 }
+
+//TODO remove
+func BenchmarkSetup(b *testing.B) {
+	for i := 1 << 9; i < 1<<62; i = i << 1 {
+		fmt.Println(i)
+		for j := 0; j < 10; j++ {
+			security := uint64(i)
+			p, _ := cr.Prime(cr.Reader, int(security/2))
+			q, _ := cr.Prime(cr.Reader, int(security/2))
+			N := new(big.Int).Mul(p, q)
+			var x, _ = cr.Int(cr.Reader, N)
+			before := time.Now()
+			a := new(big.Int).GCD(nil, nil, x, N)
+			fmt.Println("gcd:", time.Since(before), " at", i)
+			a.String()
+			before = time.Now()
+			big.Jacobi(x, N)
+			fmt.Println("J:", time.Since(before), " at", i)
+		}
+	}
+}
+
 func TestSquare(t *testing.T) {
 	r := new(big.Int).SetInt64(rand.Int63())
 	mod, _ := cr.Prime(cr.Reader, int(256))

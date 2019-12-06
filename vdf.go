@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/binary"
-	"fmt"
 	"math/big"
 	"sync"
 )
@@ -31,7 +30,7 @@ func Setup(security uint64) *big.Int {
 				break
 			}
 		}
-		fmt.Printf("\ntook %v attempts to generate a save prime", ctr)
+		//fmt.Printf("\ntook %v attempts to generate a save prime", ctr)
 		dest.Set(tmp)
 		wg.Done()
 	}
@@ -66,9 +65,15 @@ func Generate(rsaModulus *big.Int, T, security uint64) Instance {
 	//generate random x in [0,N)
 	var x, err = rand.Int(rand.Reader, rsaModulus)
 	//check if gcd(x,N)=1, to ensure that x in Z_N*
-	for big.Jacobi(x, rsaModulus) == 0 {
+	//for big.Jacobi(x, rsaModulus) == 0 {
+	//	x, err = rand.Int(rand.Reader, rsaModulus)
+	//}
+
+	//check if gcd(x,N)=1, to ensure that x in Z_N* using GCD is faster then Jacobi..
+	for new(big.Int).GCD(nil, nil, x, rsaModulus).Cmp(bigOne) != 0 {
 		x, err = rand.Int(rand.Reader, rsaModulus)
 	}
+
 	if err != nil {
 		panic(err)
 	}
